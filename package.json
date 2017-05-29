@@ -1,8 +1,8 @@
 {
   "name": "thingsNet-mobile",
   "version": "0.0.1",
-  "author": "Ionic Framework",
-  "homepage": "http://ionicframework.com/",
+  "author": "Roboclub TU Sofia",
+  "homepage": "http://roboclub.fa.tu-sofia.bg/",
   "private": true,
   "scripts": {
     "clean": "ionic-app-scripts clean",
@@ -35,5 +35,5 @@
     "@ionic/cli-plugin-ionic-angular": "1.2.0",
     "typescript": "2.3.3"
   },
-  "description": "An Ionic project"
+  "description": "IoT control application"
 }

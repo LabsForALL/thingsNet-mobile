@@ -1,14 +1,39 @@
 <ion-header>
   <ion-navbar>
     <ion-title>
-      Ionic Blank
+      WebRobot
     </ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding>
-  The world is your oyster.
-  <p>
-    If you get lost, the <a href="http://ionicframework.com/docs/v2">docs</a> will be your guide.
-  </p>
+    <form [formGroup]="userForm" novalidate (ngSubmit)="onSubmit()">
+      <ion-grid>
+
+        <ion-row>
+          <ion-col class="custom-label"> Username or email: </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col >
+            <ion-input type="text" id="name" formControlName="name" username></ion-input>
+          </ion-col>
+        </ion-row>
+
+        <ion-row margin-top>
+          <ion-col class="custom-label"> Password: </ion-col>
+        </ion-row>
+
+        <ion-row>
+          <ion-col>
+            <ion-input type="password" id="password" formControlName="password" password ></ion-input>
+          </ion-col>
+        </ion-row>
+
+      </ion-grid>
+
+      <button margin-top ion-button block color="primary" type="submit" > Sign in </button>
+      <button margin-top ion-button block color="secondary" > Register </button>
+
+    </form>
 </ion-content>
