@@ -1,15 +1,24 @@
-import {Component, Renderer2, AfterViewInit, ViewChild, Directive, ElementRef, OnInit, HostListener} from '@angular/core';
+import {
+  Component, Renderer2, AfterViewInit, ViewChild, Directive, ElementRef, OnInit, HostListener,
+  OnDestroy
+} from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import {User} from "./user-model";
+import { NavController, NavParams, LoadingController } from 'ionic-angular';
+import {Subscription} from "rxjs/Subscription";
+import {Network} from "@ionic-native/network";
+import { AlertHelper } from "../../helpers/alert-helper";
+import {PeerService} from "../../services/peer-service/peer.service";
+import {ControlPage} from "../control-page/control-page";
 
+import 'rxjs/add/operator/toPromise';
+import 'rxjs/add/operator/map';
 @Directive({ selector: '[username]' })
-export class UsernameDirective {
+export class UsernameDirective{
 
-  status: any;
   isFocused: boolean;
 
   constructor(private el: ElementRef, private rend: Renderer2) {
-    this.status = '';
     this.isFocused = false;
   }
 
@@ -17,42 +26,22 @@ export class UsernameDirective {
   @HostListener('focus')
   onFocus() {
     this.isFocused = true;
-    this.updateElement();
   }
 
 
   @HostListener('focusout')
   onFocusOut() {
-    this.rend.setAttribute(this.el.nativeElement,'class','input-default');
     this.isFocused = false;
   }
 
 
-  public setInvalid() {
+  public showInvalid() {
     this.rend.setAttribute(this.el.nativeElement,'class','input-invalid');
   }
 
 
-  public setValid() {
+  public showValid() {
     this.rend.setAttribute(this.el.nativeElement,'class','input-valid');
-  }
-
-
-  public setStatus(status: any) {
-    this.status = status;
-    this.updateElement();
-  }
-
-
-  private updateElement() {
-
-    if(!this.isFocused) return;
-
-    if(this.status == 'VALID'){
-      this.setValid();
-    }else {
-      this.setInvalid();
-    }
   }
 
 }
@@ -61,11 +50,9 @@ export class UsernameDirective {
 @Directive({ selector: '[password]' })
 export class PasswordDirective {
 
-  status: any;
   isFocused: boolean;
 
   constructor(private el: ElementRef, private rend: Renderer2) {
-    this.status = ''
     this.isFocused = false;
   }
 
@@ -73,42 +60,60 @@ export class PasswordDirective {
   @HostListener('focus')
   onFocus() {
     this.isFocused = true;
-    this.updateElement();
+
   }
 
 
   @HostListener('focusout')
   onFocusOut() {
-    this.rend.setAttribute(this.el.nativeElement,'class','input-default');
     this.isFocused = false;
   }
 
 
-  public setInvalid() {
+  public showInvalid() {
     this.rend.setAttribute(this.el.nativeElement,'class','input-invalid');
   }
 
 
-  public setValid() {
+  public showValid() {
     this.rend.setAttribute(this.el.nativeElement,'class','input-valid');
   }
 
-
-  public setStatus(status: any) {
-    this.status = status;
-    this.updateElement();
-  }
+}
 
 
-  private updateElement() {
+export class ValidationHinter {
 
-    if(!this.isFocused) return;
+  isNameValid: any;
+  isPassValid: any;
 
-    if(this.status == 'VALID'){
-      this.setValid();
-    }else {
-      this.setInvalid();
+  constructor(private dName: UsernameDirective,private dPass: PasswordDirective) { }
+
+  updateStatus(form: FormGroup) {
+
+    if(form.get('name').status == 'VALID') this.isNameValid = true;
+    else this.isNameValid = false;
+
+    if(form.get('password').status == 'VALID') this.isPassValid = true;
+    else this.isPassValid = false;
+
+
+    if(this.dName.isFocused){
+      if(this.isNameValid){
+        this.dName.showValid();
+      }else {
+        this.dName.showInvalid();
+      }
     }
+
+    if(this.dPass.isFocused){
+      if(this.isPassValid){
+        this.dPass.showValid();
+      }else {
+        this.dPass.showInvalid();
+      }
+    }
+
   }
 
 }
@@ -118,29 +123,29 @@ export class PasswordDirective {
   selector: 'page-home',
   templateUrl: 'home.html'
 })
-export class HomePage implements AfterViewInit, OnInit {
+export class HomePage implements AfterViewInit , OnInit{
 
   @ViewChild(UsernameDirective) nameDirective;
   @ViewChild(PasswordDirective) passDirective;
 
   userModel: User;
   userForm : FormGroup;
+  userFormData: any;
+  vHinter: ValidationHinter;
+  formSubscription: Subscription;
 
-
-  constructor(private fb: FormBuilder){
-    this.userModel = new User();
-  }
+  constructor(private fb: FormBuilder,
+              public navCtrl: NavController,
+              public navParams: NavParams,
+              public network: Network,
+              public alertHelper: AlertHelper,
+              public loadingCtrl: LoadingController,
+              public peerService: PeerService) { }
 
 
   ngOnInit() {
-    this.buildUserForm();
-  }
 
-  ngAfterViewInit() {
-  }
-
-
-  buildUserForm(): void {
+    this.userModel = new User();
 
     this.userForm = this.fb.group({
       'name': [this.userModel.name, [
@@ -151,34 +156,67 @@ export class HomePage implements AfterViewInit, OnInit {
       'password': [this.userModel.password,[
         Validators.required,
         Validators.minLength(7),
-        Validators.maxLength(24),
+        Validators.maxLength(28),
       ]]
     });
 
-    this.userForm.valueChanges
+    this.formSubscription = this.userForm.valueChanges
       .subscribe(data => this.onValueChanged(data));
+
+    console.log('home page init');
+  }
+
+
+  ngAfterViewInit() {
+
+    this.vHinter = new ValidationHinter(this.nameDirective, this.passDirective);
+    console.log('home page after view init');
 
   }
 
 
   onValueChanged(data?: any) {
-
-    console.log(data);
-    const nameElement = this.userForm.get('name');
-    const passwordElement = this.userForm.get('password');
-
-    this.nameDirective.setStatus(nameElement.status);
-    this.passDirective.setStatus(passwordElement.status);
-
-
+    this.userFormData = data;
+    this.vHinter.updateStatus(this.userForm);
   }
+
 
   onSubmit() {
-    //TODO checkout
-    //this.userForm = this.userForm.value;
-    console.log("asdasipdkoas");
+
+    if(!this.vHinter.isPassValid || !this.vHinter.isNameValid){
+      console.log("input is invalid !!!");
+      return;
+    }
+
+    if(this.network.type == "none"){
+      this.alertHelper.showSimpleAlert('Network connection','Please connect to internet first');
+      return;
+    }
+
+    // blocking UI
+    let loader = this.loadingCtrl.create({
+      content: 'Please wait...',
+      dismissOnPageChange: true
+    });
+
+    loader.present();
+
+    this.peerService.connect(this.userFormData.name, this.userFormData.password).then(
+
+      () => this.navCtrl.push(ControlPage),
+
+      (err) => {
+        loader.dismiss();
+        this.alertHelper.showSimpleAlert('Connection problem', err)
+      }
+    );
+
   }
 
+
+  ionViewWillUnload() {
+    if(this.formSubscription) this.formSubscription.unsubscribe();
+  }
 
 }
 

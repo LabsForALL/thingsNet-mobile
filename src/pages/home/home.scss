@@ -24,6 +24,9 @@ page-home{
   form{
     box-shadow: 0px 0px 20px rgba(0, 237, 255, 0.34);
     padding: 10px;
+    max-width: 400px;
+    margin: auto;
+    min-width: 200px;
   }
 
   .input-valid{

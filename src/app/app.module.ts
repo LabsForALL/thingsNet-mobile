@@ -7,27 +7,37 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { MyApp } from './app.component';
 import { HomePage, UsernameDirective, PasswordDirective } from '../pages/home/home';
-
+import {Network} from "@ionic-native/network";
+import {AlertHelper} from "../helpers/alert-helper";
+import {HttpModule} from "@angular/http";
+import {ControlPage} from "../pages/control-page/control-page";
+import {PeerService} from "../services/peer-service/peer.service";
 
 @NgModule({
   declarations: [
     MyApp,
     HomePage,
     UsernameDirective,
-    PasswordDirective
+    PasswordDirective,
+    ControlPage
   ],
   imports: [
     BrowserModule,
     ReactiveFormsModule,
+    HttpModule,
     IonicModule.forRoot(MyApp)
   ],
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    HomePage
+    HomePage,
+    ControlPage
   ],
   providers: [
     StatusBar,
+    PeerService,
+    AlertHelper,
+    Network,
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
