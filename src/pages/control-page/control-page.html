@@ -8,43 +8,28 @@
 
 <ion-content padding>
 
-  <ion-list no-border no-lines>
+  <ion-list class="shadow fitted" no-lines>
 
     <ion-list-header>
-      Connections states
+      Connections
     </ion-list-header>
 
     <ion-item>
-      <ion-icon name='cloud' color="light" item-left></ion-icon>
-      Server
-      <ion-icon *ngIf="isServerConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
-      <ion-icon *ngIf="!isServerConnected" name='close-circle' color="danger" item-right></ion-icon>
+      <ion-icon name='cloud' color="sky" item-left></ion-icon>
+      <ion-label color="sky" >Server</ion-label>
+      <ion-toggle [(ngModel)]="isServerConnected" (ionChange)="onServerChange()" color="sky" item-right ></ion-toggle>
     </ion-item>
 
     <ion-item>
-      <ion-icon name='radio' color="light" item-left></ion-icon>
-      Data
-      <ion-icon *ngIf="isDataConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
-      <ion-icon *ngIf="!isDataConnected" name='close-circle' color="danger" item-right></ion-icon>
-    </ion-item>
-
-    <ion-item>
-      <ion-icon name='videocam' color="light" item-left></ion-icon>
-      Media
-      <ion-icon *ngIf="isMediaConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
-      <ion-icon *ngIf="!isMediaConnected" name='close-circle' color="danger" item-right></ion-icon>
-    </ion-item>
-
-    <ion-item>
-      <ion-icon name='bluetooth' color="light" item-left></ion-icon>
-      Bluetooth
-      <ion-icon *ngIf="isBluetoothConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
-      <ion-icon *ngIf="!isBluetoothConnected" name='close-circle' color="danger" item-right></ion-icon>
+      <ion-icon name='bluetooth' color="primary" item-left></ion-icon>
+      <ion-label color="primary" >Bluetooth</ion-label>
+      <ion-toggle [(ngModel)]="isBluetoothConnected" (ionChange)="onBluetoothChange()" color="primary" item-right ></ion-toggle>
     </ion-item>
 
   </ion-list>
 
-  <button margin-top ion-button block color="primary" type="submit" > Pair bluetooth device </button>
-  <button margin-top ion-button block color="secondary" type="submit" > Connect to other device </button>
+  <ion-item-group class="fitted">
+    <button margin-top ion-button block color="secondary" outline type="submit" (click)="onConnectBtnClicked()" > Connect to other device </button>
+  </ion-item-group>
 
 </ion-content>

@@ -6,20 +6,28 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { MyApp } from './app.component';
-import { HomePage, UsernameDirective, PasswordDirective } from '../pages/home/home';
+import { LoginPage} from '../pages/login-page/login-page';
 import {Network} from "@ionic-native/network";
 import {AlertHelper} from "../helpers/alert-helper";
 import {HttpModule} from "@angular/http";
 import {ControlPage} from "../pages/control-page/control-page";
 import {PeerService} from "../services/peer-service/peer.service";
+import {PasswordDirective} from "../pages/login-page/validation-hinter";
+import {UsernameDirective} from "../pages/login-page/validation-hinter";
+import {BluetoothSearchPage} from "../pages/bluetooth-search-page/bluetooth-search-page";
+import {BluetoothService} from "../services/bluetooth-service/bluetooth.service";
+import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
+import {AndroidPermissions} from "@ionic-native/android-permissions";
+
 
 @NgModule({
   declarations: [
     MyApp,
-    HomePage,
+    LoginPage,
     UsernameDirective,
     PasswordDirective,
-    ControlPage
+    ControlPage,
+    BluetoothSearchPage
   ],
   imports: [
     BrowserModule,
@@ -30,12 +38,16 @@ import {PeerService} from "../services/peer-service/peer.service";
   bootstrap: [IonicApp],
   entryComponents: [
     MyApp,
-    HomePage,
-    ControlPage
+    LoginPage,
+    ControlPage,
+    BluetoothSearchPage
   ],
   providers: [
     StatusBar,
     PeerService,
+    BluetoothSerial,
+    AndroidPermissions,
+    BluetoothService,
     AlertHelper,
     Network,
     SplashScreen,

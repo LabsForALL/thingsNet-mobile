@@ -20,7 +20,11 @@ export class AlertHelper {
         enableBackdropDismiss: false,
         inputs: [
           {
-            name: 'robotName',
+            name: 'name',
+            placeholder: '...'
+          },
+          {
+            name: 'pass',
             placeholder: '...'
           }
         ],
@@ -33,7 +37,41 @@ export class AlertHelper {
             text: 'Register',
             handler: data => {
               //TODO: add validation
-              if (data.robotName.length > 0) resolve(data.robotName);
+              if (data.name.length > 0) resolve(data.name);
+              else return false;
+            }
+          }
+        ]
+      }).present().catch( reject );
+
+    });
+
+  }
+
+  showConnectPeerPrompt(){
+
+    return new Promise((resolve, reject) => {
+
+      this.alertCtrl.create({
+
+        message: "Enter remote peer name:",
+        enableBackdropDismiss: false,
+        inputs: [
+          {
+            name: 'peerName',
+            placeholder: '...'
+          }
+        ],
+
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+          },
+          {
+            text: 'Connect',
+            handler: data => {
+              if (data.peerName.length > 0) resolve(data.peerName);
               else return false;
             }
           }

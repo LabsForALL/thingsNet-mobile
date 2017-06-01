@@ -1,26 +1,12 @@
 control-page{
 
-  ion-content{
-    background: rgb(43, 43, 43) !important;
-  }
-
   ion-item{
-    background: rgb(38, 38, 39) !important;
+    background: black !important;
     color: aliceblue !important;
   }
 
-  ion-list{
+  .shadow{
     box-shadow: 0px 0px 20px rgba(107, 176, 184, 0.66);
-    max-width: 400px;
-    margin: auto;
-    min-width: 200px;
-  }
-
-  ion-list-header{
-    text-align: center;
-    color: white !important;
-    border: none !important;
-    margin: 0px !important;
   }
 
 }

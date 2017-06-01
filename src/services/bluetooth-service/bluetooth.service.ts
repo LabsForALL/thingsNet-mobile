@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { IBluetoothServiceListener } from './bluetooth-service.interfaces'
 import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
+import {Observable} from "rxjs/Observable";
+import {AndroidPermissions} from "@ionic-native/android-permissions";
+import {Subscription} from "rxjs/Subscription";
+import {BehaviorSubject} from "rxjs/BehaviorSubject";
 
 @Injectable()
 export class BluetoothService{
-
-    private connectionObservable: any = undefined;
-    private serviceListener: IBluetoothServiceListener = undefined;
 
     public Commands = {
       moveForward : 'f',
@@ -16,116 +16,167 @@ export class BluetoothService{
       turnRight : 'r'
     };
 
-
-    constructor(private bluetoothSerial: BluetoothSerial) { }
-
-
-    setServiceListener(observer: IBluetoothServiceListener){
-      this.serviceListener = observer;
-    }
+    connSubscription: Subscription;
+    isConnected: BehaviorSubject<boolean> = new BehaviorSubject(false);
 
 
-    removeServiceListener(){
-      this.serviceListener = undefined;
-    }
+    constructor(private bluetoothSerial: BluetoothSerial,
+                private androidPermissions: AndroidPermissions) { }
 
 
-    checkModuleState(){
-      this.bluetoothSerial.isEnabled().then(
-        () => {
-          if(this.serviceListener)
-            this.serviceListener.onBluetoothModuleOn();
-        },
-        () => {
-          if(this.serviceListener)
-            this.serviceListener.onBluetoothModuleOff();
-        }
-      )
-    }
+    checkAviability() : Promise<any> {
 
+      return new Promise((resolve, reject) => {
 
-    getPairedDevices(){
-      this.bluetoothSerial.list().then(
-        (devices) => {
-          if(this.serviceListener)
-            this.serviceListener.onPairedDevicesFound(devices);
-        },
-        () => {
-          if(this.serviceListener)
-            this.serviceListener.onPairedDevicesError();
-        }
-      );
-    }
+        // checking permissions and bluetooth module
 
-
-    startSearching(){
-
-      this.bluetoothSerial.discoverUnpaired().then(
-          (devices) => {
-            if(this.serviceListener)
-              this.serviceListener.onSearchFinished(devices);
-            searchObservable.unsubscribe();
+        this.androidPermissions.checkPermission(this.androidPermissions.PERMISSION.BLUETOOTH_ADMIN).then(
+          ()=> {
+            this.checkModule(this,resolve, reject);
           },
-          () =>{
-            if(this.serviceListener)
-              this.serviceListener.onSearchError();
-            searchObservable.unsubscribe();
-          }
-      );
+          () => {
+            this.androidPermissions.requestPermission(this.androidPermissions.PERMISSION.BLUETOOTH_ADMIN).then(
 
-      let searchObservable = this.bluetoothSerial.setDeviceDiscoveredListener().subscribe(
-        (device) =>{
-          if(this.serviceListener)
-            this.serviceListener.onSearchFound(device);
-        }
-      );
+              ()=> {
+                this.checkModule(this,resolve, reject);
+              },
+
+              () => {
+                reject("Please grant bluetooth permissions");
+              }
+
+            );
+          }
+        );
+
+      });
 
     }
 
 
-    connectInsecure(id){
+    private checkModule(self, resolve, reject) {
 
-      this.connectionObservable = this.bluetoothSerial.connectInsecure(id).subscribe(
+      self.bluetoothSerial.isEnabled().then(
         ()=>{
-          if(this.serviceListener)
-            this.serviceListener.onConnectionSuccess();
+          resolve();
         },
         ()=>{
-          if(this.serviceListener)
-            this.serviceListener.onConnectionError();
+          // trying to enable module and then push
+          self.bluetoothSerial.enable().then(
+            ()=>{
+              resolve();
+            },
+            ()=>{
+              reject("Please enable bluetooth module");
+            }
+          );
         }
       );
 
     }
 
 
-    closeConnection(){
+    startDiscovery() : Observable<any>{
 
+      return new Observable(observer => {
+
+        this.checkAviability().then(
+
+          () => {
+            // Starting discovery
+            let discoverySubscription;
+
+            this.bluetoothSerial.discoverUnpaired().then(
+              (devices) => {
+                observer.next(devices);
+                observer.complete();
+                discoverySubscription.unsubscribe();
+              },
+              () =>{
+                observer.error("Searching failed");
+                discoverySubscription.unsubscribe();
+              });
+
+            discoverySubscription = this.bluetoothSerial.setDeviceDiscoveredListener()
+              .subscribe((device)=>{
+                observer.next(device);
+              });
+
+            observer.next();
+          },
+
+          (errMsg) => {
+            observer.error(errMsg);
+          }
+        );
+
+      });
+
+    }
+
+
+    connect(id): Observable<any>{
+      return new Observable( observer => {
+
+        this.checkAviability().then(
+          () => {
+            //  Subscribe to connect, unsubscribe to disconnect.
+            this.connSubscription = this.bluetoothSerial.connect(id).subscribe(
+              () => {
+                // Keeping connection alive
+                this.isConnected.next(true);
+                observer.next(true);
+              },
+              () => {
+                this.connSubscription.unsubscribe();
+                this.isConnected.next(false);
+                observer.error("connection problem");
+              },
+              () => {
+                this.connSubscription.unsubscribe();
+                this.isConnected.next(false);
+                observer.complete();
+              }
+            );
+
+          },
+          (errMsg) => {
+            observer.error(errMsg);
+        });
+
+      });
+
+    }
+
+
+    getPairedDevices() : Promise<any>{
+      return this.bluetoothSerial.list();
+    }
+
+
+    closeConnection() {
       this.bluetoothSerial.disconnect().then(
         () => {
-          if(this.serviceListener)
-            this.serviceListener.onConnectionClosed();
+          this.isConnected.next(false);
+        },
+        () => {
+          this.isConnected.next(false);
         }
       );
-
-      this.connectionObservable.unsubscribe();
-
     }
+
 
 
     sendData(data){
 
       this.bluetoothSerial.write(data).then(
         ()=>{
-          if(this.serviceListener)
-            this.serviceListener.onCommandSend();
+          // send success
         },
         ()=>{
-          if(this.serviceListener)
-            this.serviceListener.onConnectionError();
+          // error
         }
       );
 
     }
-
 }

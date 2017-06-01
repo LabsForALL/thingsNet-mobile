@@ -3,6 +3,7 @@ import { Http, Headers } from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 import 'rxjs/add/operator/map';
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
+
 declare var Peer : any;
 
 
@@ -10,13 +11,13 @@ declare var Peer : any;
 export class PeerService {
 
   private serverConnection: any;
+
   private dataConnection: any;
   private mediaConnection: any;
   private remoteMediaStream: any;
 
-
-  username: String;
-  password: String;
+  localUsername: String;
+  localPassword: String;
 
   // TURN and STUN servers
   iceData: any;
@@ -25,15 +26,15 @@ export class PeerService {
   isServerConnected = new BehaviorSubject(false);
   isDataConnected = new BehaviorSubject(false);
   isMediaConnected = new BehaviorSubject(false);
-
+  dataStream = new BehaviorSubject(null);
 
   constructor(private http: Http) { }
 
 
   connect(name: String, pass: String) {
 
-    this.username = name;
-    this.password = pass;
+    this.localUsername = name;
+    this.localPassword = pass;
 
     return new Promise((resolve, reject) => {
 
@@ -67,7 +68,7 @@ export class PeerService {
   private createLocalPeer(resolve, reject){
 
 
-    this.serverConnection = new Peer(this.username, {
+    this.serverConnection = new Peer(this.localUsername, {
       key : 'mme0buekacrkvs4i',
       debug: 3,
       config: this.iceData
@@ -76,6 +77,8 @@ export class PeerService {
 
     this.serverConnection.on('open',
       (usrName) => {
+        this.listenForDataConnection();
+        this.listenForMediaConnection();
         this.isServerConnected.next(true);
         resolve();
       }
@@ -100,14 +103,46 @@ export class PeerService {
       (err) => {
         let errInfo = this.handlePeerError(err);
         if(errInfo.isFatal) this.isServerConnected.next(false);
+        console.log(errInfo);
         reject(errInfo.message);
       }
     );
 
-    this.listenForDataConnection();
-    this.listenForMediaConnection();
+  }
+
+
+  createDataConnection(rName) {
+
+    let dataConnection = this.serverConnection.connect(rName, {
+      label : "remoteConnection",
+      metadata : "password",
+    });
+
+
 
   }
+
+
+  createMediaConnection(rName) {
+
+    navigator.getUserMedia(
+      {video: true, audio: true},
+      (localStream) => {
+
+        let mediaConnection = this.serverConnection.call(rName, localStream, {
+
+        });
+
+      },
+      (err) => {
+        console.log('Failed to get local stream', err);
+      }
+    );
+
+  }
+
+
+
 
 
   listenForDataConnection() {
@@ -123,11 +158,13 @@ export class PeerService {
           }
         );
 
+
         dataConnection.on('data',
           (data) => {
-            console.log(data);
+            this.dataStream.next(data);
           }
         );
+
 
         dataConnection.on('close',
           () => {
@@ -135,20 +172,21 @@ export class PeerService {
           }
         );
 
+
         dataConnection.on('error',
           (err) => {
             this.isDataConnected.next(false);
           }
         );
+
       }
     );
-
   }
+
 
   listenForMediaConnection() {
 
-    this.serverConnection.on('call',
-      (mediaConnection) => {
+    this.serverConnection.on('call', (mediaConnection) => {
 
         this.mediaConnection = mediaConnection;
 
@@ -162,6 +200,7 @@ export class PeerService {
           }
         );
 
+
         mediaConnection.on('stream',
           (stream) =>{
             this.isMediaConnected.next(true);
@@ -169,11 +208,13 @@ export class PeerService {
           }
         );
 
+
         mediaConnection.on('close',
           () => {
             this.isMediaConnected.next(false);
           }
         );
+
 
         mediaConnection.on('error',
           (err) => {
@@ -185,6 +226,8 @@ export class PeerService {
     );
 
   }
+
+
 
 
 

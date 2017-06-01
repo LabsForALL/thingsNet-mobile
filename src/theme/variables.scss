@@ -14,7 +14,8 @@ $font-path: "../assets/fonts";
 
 $toolbar-background: rgba(0, 0, 0, 0.75);
 $toolbar-md-title-text-color: #03aad2;
-
+$alert-md-background-color: #003034;
+$alert-md-button-background-color: white;
 
 // Named Color Variables
 // --------------------------------------------------
@@ -29,7 +30,8 @@ $colors: (
   secondary: #249f43,
   danger:     #f53d3d,
   light:      #f4f4f4,
-  dark:       #222
+  dark:       #222,
+  sky: #28b7ff
 );
 
 
