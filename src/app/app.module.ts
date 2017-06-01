@@ -16,18 +16,18 @@ import {PasswordDirective} from "../pages/login-page/validation-hinter";
 import {UsernameDirective} from "../pages/login-page/validation-hinter";
 import {BluetoothSearchPage} from "../pages/bluetooth-search-page/bluetooth-search-page";
 import {BluetoothService} from "../services/bluetooth-service/bluetooth.service";
-import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
 import {AndroidPermissions} from "@ionic-native/android-permissions";
+import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
 
 
 @NgModule({
   declarations: [
     MyApp,
     LoginPage,
-    UsernameDirective,
-    PasswordDirective,
     ControlPage,
-    BluetoothSearchPage
+    BluetoothSearchPage,
+    UsernameDirective,
+    PasswordDirective
   ],
   imports: [
     BrowserModule,
@@ -40,18 +40,18 @@ import {AndroidPermissions} from "@ionic-native/android-permissions";
     MyApp,
     LoginPage,
     ControlPage,
-    BluetoothSearchPage
+    BluetoothSearchPage,
   ],
   providers: [
     StatusBar,
-    PeerService,
     BluetoothSerial,
-    AndroidPermissions,
-    BluetoothService,
-    AlertHelper,
     Network,
     SplashScreen,
-    {provide: ErrorHandler, useClass: IonicErrorHandler}
+    {provide: ErrorHandler, useClass: IonicErrorHandler},
+    PeerService,
+    BluetoothService,
+    AndroidPermissions,
+    AlertHelper
   ]
 })
 export class AppModule {}

@@ -1,42 +1,27 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
-import 'rxjs/add/operator/toPromise';
-import 'rxjs/add/operator/map';
+import {Network} from "@ionic-native/network";
+import {ServerConnection} from "./server.connection";
 import {BehaviorSubject} from "rxjs/BehaviorSubject";
-
-declare var Peer : any;
+import {Http} from "@angular/http";
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/toPromise';
 
 
 @Injectable()
 export class PeerService {
 
-  private serverConnection: any;
-
-  private dataConnection: any;
-  private mediaConnection: any;
-  private remoteMediaStream: any;
-
-  localUsername: String;
-  localPassword: String;
-
-  // TURN and STUN servers
-  iceData: any;
-
-  // Connections states
-  isServerConnected = new BehaviorSubject(false);
-  isDataConnected = new BehaviorSubject(false);
-  isMediaConnected = new BehaviorSubject(false);
-  dataStream = new BehaviorSubject(null);
-
-  constructor(private http: Http) { }
+  isConnected: BehaviorSubject<boolean>;
+  serverConnection: ServerConnection;
 
 
-  connect(name: String, pass: String) {
+  constructor(private network: Network,
+              private http: Http) {
+    this.isConnected = new BehaviorSubject(false);
+  }
 
-    this.localUsername = name;
-    this.localPassword = pass;
 
-    return new Promise((resolve, reject) => {
+  private getXirSysData(): Promise <any>{
+    return new Promise((resolve, reject) =>{
 
       // getting the TURN servers data from xirsys
       let headers = new Headers({ 'Content-Type': 'application/json'});
@@ -53,107 +38,89 @@ export class PeerService {
         .toPromise()
         .then(
           (iceData) => {
-            // TURN servers data is ready so lets create the peer
-            this.iceData = iceData;
-            this.createLocalPeer(resolve, reject);
+            resolve(iceData);
           },
           err => {
             reject(err);
           }
         );
-    });
-  }
 
-
-  private createLocalPeer(resolve, reject){
-
-
-    this.serverConnection = new Peer(this.localUsername, {
-      key : 'mme0buekacrkvs4i',
-      debug: 3,
-      config: this.iceData
     });
 
-
-    this.serverConnection.on('open',
-      (usrName) => {
-        this.listenForDataConnection();
-        this.listenForMediaConnection();
-        this.isServerConnected.next(true);
-        resolve();
-      }
-    );
-
-
-    this.serverConnection.on('disconnected',
-      () => {
-        this.isServerConnected.next(false);
-      }
-    );
-
-
-    this.serverConnection.on('close',
-      () => {
-        this.isServerConnected.next(false);
-      }
-    );
-
-
-    this.serverConnection.on('error',
-      (err) => {
-        let errInfo = this.handlePeerError(err);
-        if(errInfo.isFatal) this.isServerConnected.next(false);
-        console.log(errInfo);
-        reject(errInfo.message);
-      }
-    );
-
   }
 
 
-  createDataConnection(rName) {
+  connect(name: String, pass: String): Promise<any> {
+    return new Promise((resolve, reject) => {
 
-    let dataConnection = this.serverConnection.connect(rName, {
-      label : "remoteConnection",
-      metadata : "password",
-    });
-
-
-
-  }
-
-
-  createMediaConnection(rName) {
-
-    navigator.getUserMedia(
-      {video: true, audio: true},
-      (localStream) => {
-
-        let mediaConnection = this.serverConnection.call(rName, localStream, {
-
-        });
-
-      },
-      (err) => {
-        console.log('Failed to get local stream', err);
+      if (this.network.type == "none") {
+        reject("'Please connect to internet first'");
+        return;
       }
-    );
+
+      this.getXirSysData().then(
+        data => {
+
+          this.serverConnection = new ServerConnection(name,pass,data);
+          this.serverConnection.observeServerConnection().subscribe(
+            isConnected => {
+              this.isConnected.next(isConnected);
+              if(isConnected){
+                // conn open
+                resolve();
+              }
+            },
+            err => {
+              reject(err);
+              this.isConnected.error(err);
+            },
+            () => {
+              // conn closed
+              this.isConnected.complete();
+            }
+          )
+
+        },
+        err => {
+          reject(err);
+        }
+      );
+
+    })
 
   }
 
+  
 
 
 
 
-  listenForDataConnection() {
 
+
+
+
+
+
+
+
+
+
+
+
+
+  listenForPeerConnections() {
+  /*
+    // Listen for data connection
     this.serverConnection.on('connection',
       (dataConnection) => {
 
-        this.dataConnection = dataConnection;
+        this.pConnections.value.push(dataConnection);
 
         dataConnection.on('open',
           () =>{
+            // Able to send data !!
+
+
             this.isDataConnected.next(true);
           }
         );
@@ -181,11 +148,12 @@ export class PeerService {
 
       }
     );
-  }
 
 
-  listenForMediaConnection() {
 
+
+
+    // Listen for media connection
     this.serverConnection.on('call', (mediaConnection) => {
 
         this.mediaConnection = mediaConnection;
@@ -224,82 +192,40 @@ export class PeerService {
         );
       }
     );
-
+*/
   }
 
 
 
 
+  createPeerConnection(pName) {
 
-  private handlePeerError (err) {
+    /*
+    let dataConnection = this.serverConnection.connect(pName, {
+      label : "remoteConnection",
+      metadata : "password",
+    });
 
-    let errorMessage : String = "";
-    let isFatal: boolean = true;
+    navigator.getUserMedia(
+      {video: true, audio: true},
+      (localStream) => {
+        let mediaConnection = this.serverConnection.call(pName, localStream, {
+          metadata:"asdko"
 
-    switch (err.type) {
-
-      // The peer you're trying to connect to does not exist.
-      case 'peer-unavailable':
-        errorMessage = "Peer is unavailable";
-        isFatal = false;
-        break;
-
-      // You've already disconnected this peer from
-      // the server and can no longer make any new connections on it.
-      case 'disconnected':
-        errorMessage = "Disconnected from the server";
-        break;
-
-      case 'browser-incompatible':
-        errorMessage = "Please use browser with WebRTC support.";
-        break;
-
-      case 'invalid-id':
-        errorMessage = "Invalid ID, try new one";
-        break;
-
-      case 'invalid-key':
-        errorMessage = "Invalid key, get another one";
-        break;
-
-      case 'network':
-        errorMessage = "Network problem occurred, check your connection";
-        break;
-
-      case 'ssl-unavailable':
-        errorMessage = "SSL is unavailable";
-        break;
-
-      case 'server-error':
-        errorMessage = "Server error occurred";
-        break;
-
-      case 'socket-error':
-        errorMessage = "Socket error occurred";
-        break;
-
-      case 'socket-closed':
-        errorMessage = "Socket was closed";
-        break;
-
-      case 'unavailable-id':
-        errorMessage = "This id was taken";
-        break;
-
-      case 'webrtc':
-        errorMessage = "RTC internal error occurred";
-        break;
-    }
-
-    return { isFatal: isFatal, message : errorMessage};
+        });
+      },
+      (err) => {
+        console.log('Failed to get local stream', err);
+      }
+    );
+  */
   }
+
+
 
 
   private destroyLocalPeer(){
-    if(this.serverConnection){
-      this.serverConnection.disconnect();
-      this.serverConnection.destroy();
-    }
+
   }
 
 

@@ -1,15 +1,11 @@
 import { Component, AfterViewInit, ViewChild, OnInit } from '@angular/core';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import {User} from "./user-model";
-import { NavController, NavParams, LoadingController } from 'ionic-angular';
+import { NavController, LoadingController } from 'ionic-angular';
 import {Subscription} from "rxjs/Subscription";
-import {Network} from "@ionic-native/network";
 import { AlertHelper } from "../../helpers/alert-helper";
 import {PeerService} from "../../services/peer-service/peer.service";
 import {ControlPage} from "../control-page/control-page";
-
-import 'rxjs/add/operator/toPromise';
-import 'rxjs/add/operator/map';
 import {PasswordDirective, UsernameDirective, ValidationHinter} from "./validation-hinter";
 
 
@@ -30,8 +26,6 @@ export class LoginPage implements AfterViewInit , OnInit{
 
   constructor(private fb: FormBuilder,
               public navCtrl: NavController,
-              public navParams: NavParams,
-              public network: Network,
               public alertHelper: AlertHelper,
               public loadingCtrl: LoadingController,
               public peerService: PeerService) { }
@@ -73,11 +67,6 @@ export class LoginPage implements AfterViewInit , OnInit{
 
     if(!this.vHinter.isPassValid || !this.vHinter.isNameValid){
       console.log("input is invalid !!!");
-      return;
-    }
-
-    if(this.network.type == "none"){
-      this.alertHelper.showSimpleAlert('Network connection','Please connect to internet first');
       return;
     }
 

@@ -14,8 +14,6 @@ $font-path: "../assets/fonts";
 
 $toolbar-background: rgba(0, 0, 0, 0.75);
 $toolbar-md-title-text-color: #03aad2;
-$alert-md-background-color: #003034;
-$alert-md-button-background-color: white;
 
 // Named Color Variables
 // --------------------------------------------------
@@ -26,12 +24,14 @@ $alert-md-button-background-color: white;
 // The "primary" color is the only required color in the map.
 
 $colors: (
-  primary: #2e63b2,
-  secondary: #249f43,
+  primary: #3374cb,
+  secondary: #24bb47,
   danger:     #f53d3d,
   light:      #f4f4f4,
   dark:       #222,
-  sky: #28b7ff
+  sky: #28b7ff,
+  custom-cyan: #46c4c7,
+  custom-purple: #862eeb,
 );
 
 
