@@ -8,6 +8,8 @@ import {IPeerServiceListeners} from "../../services/peer-service/peer-service.in
 import {Subscription} from "rxjs/Subscription";
 import {VideoDirective} from "./video.directive";
 import { ScreenOrientation } from '@ionic-native/screen-orientation';
+//import { StreamingMedia, StreamingVideoOptions } from '@ionic-native/streaming-media';
+
 
 
 @Component({
@@ -22,6 +24,7 @@ export class ControlPage implements IPeerServiceListeners {
   username: any;
   btBadgeText: any;
   isBtConnected: boolean;
+  isLandscaped: boolean;
 
   sensorsToggleState = false;
   locationToggleState = false;
@@ -38,7 +41,7 @@ export class ControlPage implements IPeerServiceListeners {
               public changeDetector: ChangeDetectorRef,
               public bluetoothService: BluetoothService,
               public peerService: PeerService,
-              private screenOrientation: ScreenOrientation) { }
+              private screenOrientation: ScreenOrientation,) { }
 
 
   /** Lifecycle callbacks */
@@ -73,6 +76,20 @@ export class ControlPage implements IPeerServiceListeners {
 
     this.screenOrientationSubscription = this.screenOrientation.onChange().subscribe(
       () => {
+        switch (this.screenOrientation.type) {
+
+          case this.screenOrientation.ORIENTATIONS.LANDSCAPE_PRIMARY:
+
+            this.isLandscaped = true;
+            this.changeDetector.detectChanges();
+            break;
+
+          case this.screenOrientation.ORIENTATIONS.PORTRAIT_PRIMARY:
+            this.isLandscaped = false;
+            this.changeDetector.detectChanges();
+            break;
+
+        }
         console.log(this.screenOrientation.type);
       },
       err => {
@@ -143,29 +160,25 @@ export class ControlPage implements IPeerServiceListeners {
   /** Peer service callbacks */
 
   onPeerServiceOpen(regName: String) {
-    this.isServerConnected = true;
-    this.changeDetector.detectChanges();
+    this.serverOn();
   }
 
 
   onPeerServiceDisconnected() {
     // able to reconnect
-    this.isServerConnected = false;
-    this.changeDetector.detectChanges();
+
   }
 
 
   onPeerServiceClosed() {
-    this.isServerConnected = false;
-    this.changeDetector.detectChanges();
+    this.serverOff();
     //unable to create more connections
     this.navCtrl.popToRoot();
   }
 
 
   onPeerServiceError(errMsg: String, isFatal: boolean) {
-    this.isServerConnected = false;
-    this.changeDetector.detectChanges();
+    this.serverOff();
     this.alertHelper.showSimpleAlert('', errMsg.toString());
   }
 
@@ -173,20 +186,17 @@ export class ControlPage implements IPeerServiceListeners {
   /** Data connection callbacks  */
 
   onPeerDataConnectionOpen() {
-    this.isDataConnected = true;
-    this.changeDetector.detectChanges();
+    this.dataOn()
   }
 
 
   onPeerDataConnectionClose() {
-    this.isDataConnected = false;
-    this.changeDetector.detectChanges();
+    this.dataOff();
   }
 
 
   onPeerDataConnectionError(err: any) {
-    this.isDataConnected = false;
-    this.changeDetector.detectChanges();
+    this.dataOff();
     this.alertHelper.showSimpleAlert('', err);
   }
 
@@ -194,22 +204,107 @@ export class ControlPage implements IPeerServiceListeners {
   /** Media connection callbacks  */
 
   onPeerMediaConnectionOpen(stream: any) {
-    this.isMediaConnected = true;
+
     this.videoDirective.setVideoStream(stream);
-    this.changeDetector.detectChanges();
+    console.log(stream);
+
+    console.log(stream.getAudioTracks());
+
+
+
+    navigator.mediaDevices.enumerateDevices()
+      .then(this.gotDevices)
+      .catch(err => console.log(err));
+
+    /*
+    let options: StreamingVideoOptions = {
+      successCallback: () => { console.log('Video played') },
+      errorCallback: (e) => { console.log('Error streaming') },
+      orientation: 'landscape'
+    };
+
+    this.streamingMedia.playVideo('https://path/to/video/stream', options);
+    */
+
+    this.mediaOn();
+  }
+
+
+  gotDevices(deviceInfos) {
+
+    for (let i = 0; i !== deviceInfos.length; ++i) {
+
+      let deviceInfo = deviceInfos[i];
+
+      console.log(deviceInfo);
+
+      let deviceId = deviceInfo.deviceId;
+
+      if (deviceInfo.kind === 'audioinput') {
+        console.log(deviceInfo.label);
+
+      } else if (deviceInfo.kind === 'audiooutput') {
+        console.log(deviceInfo.label);
+
+      } else if (deviceInfo.kind === 'videoinput') {
+
+        console.log(deviceInfo.label);
+
+      } else {
+        console.log('Some other kind of source/device: ', deviceInfo);
+      }
+    }
+
   }
 
 
   onPeerMediaConnectionClosed() {
-    this.isMediaConnected = false;
-    this.changeDetector.detectChanges();
+    this.mediaOff();
   }
 
 
   onPeerMediaConnectionError(err: any) {
+    this.mediaOff();
+    this.alertHelper.showSimpleAlert('', err);
+  }
+
+
+  /** Helper methods */
+
+  serverOn() {
+    this.isServerConnected = true;
+    this.changeDetector.detectChanges();
+  }
+
+
+  serverOff(){
+    this.isServerConnected = false;
+    this.changeDetector.detectChanges();
+  }
+
+
+  dataOn() {
+    this.isDataConnected = true;
+    this.changeDetector.detectChanges();
+
+  }
+
+
+  dataOff() {
+    this.isDataConnected = false;
+    this.changeDetector.detectChanges();
+  }
+
+
+  mediaOn(){
+    this.isMediaConnected = true;
+    this.changeDetector.detectChanges();
+  }
+
+
+  mediaOff(){
     this.isMediaConnected = false;
     this.changeDetector.detectChanges();
-    this.alertHelper.showSimpleAlert('', err);
   }
 
 }

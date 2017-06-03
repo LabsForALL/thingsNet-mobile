@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header *ngIf="!isLandscaped">
   <ion-navbar>
     <ion-title>
       Control Panel
@@ -6,15 +6,12 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
+<ion-content padding [class.hide]="isLandscaped">
 
-  <ion-list inset class="shadow fitted" no-lines>
-    <ion-item>Username: {{ username }} </ion-item>
-  </ion-list>
-
-  <ion-list class="shadow fitted" no-lines>
+  <ion-list class="shadow fitted" no-lines >
 
     <ion-list-header>
+      <ion-item>Username: {{ username }} </ion-item>
       Connections
     </ion-list-header>
 
@@ -71,6 +68,6 @@
 
   </ion-list>
 
-  <video appVideo autoplay class="custom-video" [class.hide]="!isMediaConnected" src="" ></video>
-
 </ion-content>
+
+<video appVideo autoplay [class.custom-video]="!isLandscaped" [class.video-full]="isLandscaped" [class.hide]="!isMediaConnected" src="" ></video>
