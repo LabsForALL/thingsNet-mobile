@@ -166,17 +166,15 @@ export class BluetoothService{
     }
 
 
-
     sendData(data){
-
       this.bluetoothSerial.write(data).then(
         ()=>{
-          // send success
+          console.log(data + 'sended');
         },
         ()=>{
-          // error
+          console.log('send data error');
         }
       );
-
     }
+
 }

@@ -18,6 +18,7 @@ import {BluetoothSearchPage} from "../pages/bluetooth-search-page/bluetooth-sear
 import {BluetoothService} from "../services/bluetooth-service/bluetooth.service";
 import {AndroidPermissions} from "@ionic-native/android-permissions";
 import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
+import {VideoDirective} from "../pages/control-page/video.directive";
 
 
 @NgModule({
@@ -27,7 +28,8 @@ import {BluetoothSerial} from "@ionic-native/bluetooth-serial";
     ControlPage,
     BluetoothSearchPage,
     UsernameDirective,
-    PasswordDirective
+    PasswordDirective,
+    VideoDirective
   ],
   imports: [
     BrowserModule,

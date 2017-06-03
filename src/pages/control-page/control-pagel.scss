@@ -9,4 +9,15 @@ control-page{
     box-shadow: 0px 0px 20px rgba(107, 176, 184, 0.66);
   }
 
+  .custom-video {
+    max-width: 240px !important;
+    max-height: 180px !important;
+    margin: auto !important;
+    display: block !important;
+  }
+
+  .hide {
+    display: none !important;
+  }
+
 }

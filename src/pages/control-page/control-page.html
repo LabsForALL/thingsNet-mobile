@@ -9,8 +9,7 @@
 <ion-content padding>
 
   <ion-list inset class="shadow fitted" no-lines>
-    <ion-item>Username: {{this.peerService.localUsername}} </ion-item>
-    <ion-item>Server status: waiting connections</ion-item>
+    <ion-item>Username: {{ username }} </ion-item>
   </ion-list>
 
   <ion-list class="shadow fitted" no-lines>
@@ -20,16 +19,26 @@
     </ion-list-header>
 
     <ion-item>
-      <ion-icon name='cloud' color="sky" item-left></ion-icon>
-      <ion-label color="sky" >Server</ion-label>
-      <ion-icon name='arrow-forward' color="sky" (click)="onServerPage()" item-right></ion-icon>
+      <ion-icon name='cloud'  item-left></ion-icon>
+      <ion-label> Server connection </ion-label>
+      <ion-icon *ngIf="isServerConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
+      <ion-icon *ngIf="!isServerConnected" name='close-circle' color="danger" item-right></ion-icon>
     </ion-item>
 
     <ion-item>
-      <ion-icon name='link' color="secondary" item-left></ion-icon>
-      <ion-label color="secondary" >Peer</ion-label>
-      <ion-icon name='arrow-forward' color="secondary" (click)="onPeerPage()" item-right></ion-icon>
+      <ion-icon name='radio' item-left></ion-icon>
+      <ion-label > Data connection </ion-label>
+      <ion-icon *ngIf="isDataConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
+      <ion-icon *ngIf="!isDataConnected" name='close-circle' color="danger" item-right></ion-icon>
     </ion-item>
+
+    <ion-item>
+      <ion-icon name='videocam' item-left></ion-icon>
+      <ion-label> Media connection </ion-label>
+      <ion-icon *ngIf="isMediaConnected" name='checkmark-circle' color="secondary" item-right></ion-icon>
+      <ion-icon *ngIf="!isMediaConnected" name='close-circle' color="danger" item-right></ion-icon>
+    </ion-item>
+
 
     <ion-list-header>
       Capabilities
@@ -37,8 +46,9 @@
 
     <ion-item>
       <ion-icon item-left name='bluetooth' color="primary" ></ion-icon>
-      <ion-label color="primary" >Bluetooth robot</ion-label>
-      <ion-toggle [(ngModel)]="robotToggleState" (ionChange)="onRobotToggled()" color="primary" item-right ></ion-toggle>
+      <ion-label color="primary" >Bluetooth device</ion-label>
+      <ion-badge item-right *ngIf="!isBtConnected" (click)='openBluetoothPage()' color="primary"> {{ btBadgeText }} </ion-badge>
+      <ion-badge item-right *ngIf="isBtConnected" (click)='disconectBt()' color="danger"> {{ btBadgeText }} </ion-badge>
     </ion-item>
 
     <ion-item>
@@ -53,8 +63,14 @@
       <ion-toggle [(ngModel)]="locationToggleState" (ionChange)="onLocationToggled()" color="custom-purple" item-right ></ion-toggle>
     </ion-item>
 
+    <ion-item>
+      <ion-icon item-left name='battery-full' color="secondary" ></ion-icon>
+      <ion-label color="secondary" >Battery</ion-label>
+      <ion-toggle [(ngModel)]="batteryToggleState" (ionChange)="onBatteryToggled()" color="primary" item-right ></ion-toggle>
+    </ion-item>
 
   </ion-list>
 
+  <video appVideo autoplay class="custom-video" [class.hide]="!isMediaConnected" src="" ></video>
 
 </ion-content>

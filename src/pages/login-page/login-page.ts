@@ -7,13 +7,14 @@ import { AlertHelper } from "../../helpers/alert-helper";
 import {PeerService} from "../../services/peer-service/peer.service";
 import {ControlPage} from "../control-page/control-page";
 import {PasswordDirective, UsernameDirective, ValidationHinter} from "./validation-hinter";
+import {IPeerServiceListener} from "../../services/peer-service/peer-service.interfaces";
 
 
 @Component({
   selector: 'login-page',
   templateUrl: 'login-page.html'
 })
-export class LoginPage implements AfterViewInit , OnInit{
+export class LoginPage implements AfterViewInit , OnInit, IPeerServiceListener{
 
   @ViewChild(UsernameDirective) nameDirective;
   @ViewChild(PasswordDirective) passDirective;
@@ -23,6 +24,7 @@ export class LoginPage implements AfterViewInit , OnInit{
   userFormData: any;
   vHinter: ValidationHinter;
   formSubscription: Subscription;
+  loader: any;
 
   constructor(private fb: FormBuilder,
               public navCtrl: NavController,
@@ -71,23 +73,48 @@ export class LoginPage implements AfterViewInit , OnInit{
     }
 
     // blocking UI
-    let loader = this.loadingCtrl.create({
+    this.loader = this.loadingCtrl.create({
       content: 'Connecting ...',
       dismissOnPageChange: true
     });
 
-    loader.present();
+    this.loader.present();
+    this.peerService.tryToConnect(this.userFormData.name, this.userFormData.password);
+    this.peerService.setServiceListener(this);
+  }
 
-    this.peerService.connect(this.userFormData.name, this.userFormData.password).then(
 
-      () => this.navCtrl.push(ControlPage),
+  onPeerServiceOpen(regName: String) {
+    this.navCtrl.push(ControlPage);
+  }
 
-      (err) => {
-        loader.dismiss();
-        this.alertHelper.showSimpleAlert('Connection problem', err)
-      }
-    );
 
+  onPeerServiceDisconnected() {
+    if(this.loader){
+      this.loader.dismiss();
+      this.loader = false;
+    }
+  }
+
+
+  onPeerServiceClosed() {
+    if(this.loader){
+      this.loader.dismiss();
+      this.loader = false;
+    }
+  }
+
+
+  onPeerServiceError(errMsg, isFatal: boolean) {
+    this.alertHelper.showSimpleAlert('Connection problem', errMsg);
+    if(this.loader){
+      this.loader.dismiss();
+      this.loader = false;
+    }
+  }
+
+  ionViewWillLeave(){
+    this.peerService.removeServiceListener();
   }
 
 
